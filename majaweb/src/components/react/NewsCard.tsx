@@ -19,7 +19,7 @@ export default function NewsCard({
 }: NewsCardProps) {
   return (
     <motion.article
-      className="group bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col"
+      className="group h-full bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col"
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-30px" }}

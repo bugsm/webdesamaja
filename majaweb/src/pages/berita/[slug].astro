@@ -5,6 +5,7 @@ import Navbar from "../../components/Navbar.astro";
 import Footer from "../../components/Footer.astro";
 import { fetchSanity, urlForImage } from "../../utils/sanity";
 import { PortableText } from "@portabletext/react";
+import NewsCarousel from "../../components/react/NewsCarousel";
 
 export async function getStaticPaths() {
   const query = `*[_type == "berita" && defined(slug.current)]{ "params": { "slug": slug.current } }`;
@@ -19,7 +20,7 @@ export async function getStaticPaths() {
 }
 
 const { slug } = Astro.params;
-const query = `*[_type == "berita" && slug.current == $slug][0]{ title, excerpt, date, category, image, youtubeUrl, body }`;
+const query = `*[_type == "berita" && slug.current == $slug][0]{ title, excerpt, date, category, image, youtubeUrl, body, views }`;
 const post = await fetchSanity<any>(query, { slug });
 
 if (!post && slug !== "fallback-berita") {
@@ -33,8 +34,32 @@ const displayPost = post || {
   excerpt: "Silakan periksa kembali URL atau pastikan koneksi ke Sanity berjalan dengan baik.",
   body: null,
   image: null,
-  youtubeUrl: null
+  youtubeUrl: null,
+  views: 0
 };
+
+// URL kanonik untuk tombol bagikan
+const shareUrl = new URL(Astro.url.pathname, Astro.site ?? "https://desamaja.id").href;
+const shareText = displayPost.title;
+const shareLinks = {
+  facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+  whatsapp: `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
+  x: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
+};
+
+// Berita terbaru lain untuk carousel di bawah artikel
+const relatedQuery = `*[_type == "berita" && slug.current != $slug] | order(date desc)[0...6]{
+  title, excerpt, date, category, slug, image
+}`;
+const relatedRaw = await fetchSanity<any[]>(relatedQuery, { slug });
+const relatedNews = (relatedRaw || []).map((n) => ({
+  title: n.title,
+  excerpt: n.excerpt,
+  date: n.date,
+  category: n.category,
+  slug: n.slug?.current || n.slug,
+  image: n.image ? urlForImage(n.image).width(800).height(600).fit("crop").url() : undefined,
+}));
 
 // Helper untuk convert YouTube link ke Embed URL
 function getYouTubeEmbedUrl(url: string) {
@@ -77,6 +102,30 @@ const youtubeEmbedUrl = getYouTubeEmbedUrl(displayPost.youtubeUrl);
                 {displayPost.category || 'Berita'}
               </span>
             </div>
+          </div>
+        </div>
+
+        {/* Jumlah dilihat + Bagikan */}
+        <div class="mt-6 pt-5 border-t border-gray-200 flex flex-wrap items-center justify-between gap-4">
+          <span class="inline-flex items-center gap-2 text-sm text-[#6B6B6B]">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span id="view-count" data-slug={slug}>{(displayPost.views || 0).toLocaleString('id-ID')}</span> kali dilihat
+          </span>
+
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-[#6B6B6B] mr-1 hidden sm:inline">Bagikan:</span>
+            <a href={shareLinks.facebook} target="_blank" rel="noopener noreferrer" aria-label="Bagikan ke Facebook" class="w-9 h-9 rounded-full flex items-center justify-center bg-[#1877F2] text-white hover:opacity-90 transition-opacity">
+              <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </a>
+            <a href={shareLinks.whatsapp} target="_blank" rel="noopener noreferrer" aria-label="Bagikan ke WhatsApp" class="w-9 h-9 rounded-full flex items-center justify-center bg-[#25D366] text-white hover:opacity-90 transition-opacity">
+              <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.71.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+            </a>
+            <a href={shareLinks.x} target="_blank" rel="noopener noreferrer" aria-label="Bagikan ke X" class="w-9 h-9 rounded-full flex items-center justify-center bg-black text-white hover:opacity-90 transition-opacity">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </a>
           </div>
         </div>
       </div>
@@ -128,7 +177,52 @@ const youtubeEmbedUrl = getYouTubeEmbedUrl(displayPost.youtubeUrl);
         </div>
       </div>
     </article>
+
+    {/* Berita Terbaru (carousel) */}
+    {relatedNews.length > 0 && (
+      <section class="border-t border-gray-100 bg-[var(--color-background)] py-14 md:py-16">
+        <div class="container-village">
+          <div class="mb-6 flex items-end justify-between">
+            <div>
+              <h2 class="text-2xl md:text-3xl font-bold text-[var(--color-primary-dark)]" style="font-family: var(--font-heading);">
+                Berita Terbaru
+              </h2>
+              <div class="mt-2 h-1 w-12 rounded-full bg-[var(--color-accent)]"></div>
+            </div>
+            <a href="/berita" class="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-light)]">
+              Semua berita
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </a>
+          </div>
+          <NewsCarousel client:visible items={relatedNews} />
+        </div>
+      </section>
+    )}
   </main>
-  
+
   <Footer slot="footer" />
 </BaseLayout>
+
+<script>
+  // Penghitung "jumlah dilihat": increment sekali per sesi per artikel via Netlify Function.
+  const el = document.getElementById("view-count");
+  const slug = el?.getAttribute("data-slug");
+  if (el && slug && slug !== "fallback-berita") {
+    const key = "viewed_" + slug;
+    const alreadyViewed = sessionStorage.getItem(key) === "1";
+    const hit = alreadyViewed ? "0" : "1";
+    fetch(`/.netlify/functions/view?slug=${encodeURIComponent(slug)}&hit=${hit}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && typeof data.views === "number") {
+          el.textContent = data.views.toLocaleString("id-ID");
+          if (hit === "1") sessionStorage.setItem(key, "1");
+        }
+      })
+      .catch(() => {
+        /* function belum aktif (mis. dev lokal) — biarkan angka awal */
+      });
+  }
+</script>

@@ -2,14 +2,12 @@ import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 import sanity from '@sanity/astro';
-import node from '@astrojs/node';
 
 // https://astro.build/config
+// Situs di-render sepenuhnya statik (SSG) agar bisa dideploy gratis di Netlify
+// tanpa server/adapter. Data Sanity diambil saat build time.
 export default defineConfig({
   output: 'static',
-  adapter: node({
-    mode: 'standalone'
-  }),
   integrations: [
     react(),
     sanity({
@@ -21,9 +19,6 @@ export default defineConfig({
   ],
   vite: {
     plugins: [tailwindcss()],
-    ssr: {
-      noExternal: ['react-leaflet', 'leaflet'],
-    },
   },
   site: 'https://desamaja.id',
 });

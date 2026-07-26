@@ -3,87 +3,104 @@ import "../styles/global.css";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
-import VillageMap from "../components/react/VillageMap";
-import { fetchSanity } from "../utils/sanity";
 
-const query = `*[_type == "fasilitas"] {
-  name, type, "lat": coordinates.lat, "lng": coordinates.lng, description
-}`;
-const sanityFasilitas = await fetchSanity<any[]>(query);
+// URL aplikasi WebGIS Peta Digital Desa Maja (dibuat terpisah, di-embed di sini
+// agar tidak perlu membangun peta dua kali). Ubah di sini jika URL berubah.
+const PETA_URL = "https://bugsm.github.io/petadigital/";
 ---
 
-<BaseLayout title="Peta Desa" description="Peta interaktif Desa Maja. Lihat batas wilayah, lokasi fasilitas umum, sekolah, tempat ibadah, kesehatan, dan potensi wisata desa.">
+<BaseLayout title="Peta Desa" description="Peta interaktif Desa Maja. Lihat batas wilayah, lokasi bangunan, dan fasilitas umum desa dalam peta digital WebGIS.">
   <Navbar slot="header" />
 
   <!-- Page Hero -->
-  <section class="bg-[var(--color-primary-dark)] py-12 md:py-16">
-    <div class="container-village text-center">
-      <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4" style="font-family: var(--font-heading);">
-        Peta Desa Maja
+  <section class="relative overflow-hidden gradient-primary py-14 md:py-20">
+    <div class="pointer-events-none absolute inset-0 opacity-[0.07] bg-[radial-gradient(circle_at_20%_20%,white_1px,transparent_1px)] [background-size:22px_22px]"></div>
+    <div class="container-village relative text-center">
+      <span class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-medium text-white/90 backdrop-blur-sm">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+        </svg>
+        WebGIS Desa Maja
+      </span>
+      <h1 class="mt-5 text-3xl font-bold text-white md:text-4xl lg:text-5xl" style="font-family: var(--font-heading);">
+        Peta Digital Desa Maja
       </h1>
-      <p class="text-white/70 text-base md:text-lg max-w-2xl mx-auto">
-        Peta interaktif wilayah Desa Maja. Klik marker untuk melihat informasi fasilitas, 
-        dan gunakan panel layer di kanan atas untuk menampilkan/menyembunyikan kategori.
+      <p class="mx-auto mt-4 max-w-2xl text-base text-white/70 md:text-lg">
+        Peta interaktif wilayah, bangunan, dan fasilitas Desa Maja. Gunakan panel
+        <em>layer</em> untuk menampilkan atau menyembunyikan kategori, dan cubit/scroll
+        untuk memperbesar peta.
       </p>
-      <div class="mt-4 h-1 w-16 rounded-full bg-[var(--color-accent)] mx-auto"></div>
+      <div class="mx-auto mt-5 h-1 w-16 rounded-full bg-[var(--color-accent)]"></div>
     </div>
   </section>
 
   <!-- Map Section -->
-  <section class="section-padding bg-[var(--color-background)]">
+  <section class="section-padding bg-transparent">
     <div class="container-village">
-      {/* Legend */}
-      <div class="mb-6 flex flex-wrap gap-4 justify-center text-sm">
-        <div class="flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full bg-[#DC2626]"></span>
-          <span class="text-[var(--color-foreground)]">Kantor Desa</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full bg-[#2563EB]"></span>
-          <span class="text-[var(--color-foreground)]">Sekolah</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full bg-[#16A34A]"></span>
-          <span class="text-[var(--color-foreground)]">Kesehatan</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full bg-[#7C3AED]"></span>
-          <span class="text-[var(--color-foreground)]">Tempat Ibadah</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full bg-[#D97706]"></span>
-          <span class="text-[var(--color-foreground)]">Pasar / Ekonomi</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full bg-[#0891B2]"></span>
-          <span class="text-[var(--color-foreground)]">Wisata</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="w-5 h-0.5 border-t-2 border-dashed border-[var(--color-primary)]"></span>
-          <span class="text-[var(--color-foreground)]">Batas Wilayah (perkiraan)</span>
-        </div>
-      </div>
-
-      {/* Map */}
-      <div class="h-[600px] rounded-3xl overflow-hidden shadow-lg border-4 border-white">
-        <VillageMap client:only="react" facilities={sanityFasilitas || undefined} />
-      </div>
-
-      {/* Disclaimer */}
-      <div class="mt-6 p-4 rounded-xl bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30">
-        <div class="flex gap-3 items-start">
-          <svg class="w-5 h-5 text-[var(--color-accent-dark)] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+      <div class="mb-5 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+        <p class="text-sm text-[var(--color-muted-foreground)]">
+          Peta dimuat dari aplikasi <strong class="text-[var(--color-primary-dark)]">Peta Digital Desa Maja</strong>.
+          Jika peta lambat memuat, buka versi layar penuh.
+        </p>
+        <a
+          href={PETA_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex shrink-0 items-center gap-2 rounded-lg bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:bg-[var(--color-primary-light)] hover:shadow-lg"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
           </svg>
+          Buka Layar Penuh
+        </a>
+      </div>
+
+      {/* Embedded WebGIS map */}
+      <div class="group relative overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-muted)] shadow-xl ring-1 ring-black/5">
+        {/* Loading skeleton (disembunyikan setelah iframe load) */}
+        <div id="peta-loader" class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-[var(--color-muted)] transition-opacity duration-500">
+          <div class="text-center">
+            <div class="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-[var(--color-primary)] border-t-transparent"></div>
+            <p class="text-sm text-[var(--color-muted-foreground)]">Memuat peta digital…</p>
+          </div>
+        </div>
+        <iframe
+          id="peta-frame"
+          src={PETA_URL}
+          title="Peta Digital Desa Maja"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          class="h-[70vh] max-h-[760px] min-h-[480px] w-full border-0"
+          allowfullscreen
+        ></iframe>
+      </div>
+
+      {/* Info cards */}
+      <div class="mt-6 grid gap-4 sm:grid-cols-2">
+        <div class="flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+            </svg>
+          </div>
           <div>
-            <p class="font-semibold text-[var(--color-accent-dark)] text-sm" style="font-family: var(--font-heading);">
-              Catatan Penting
+            <p class="text-sm font-semibold text-[var(--color-primary-dark)]" style="font-family: var(--font-heading);">Cara Menggunakan</p>
+            <p class="mt-1 text-sm text-[var(--color-muted-foreground)]">
+              Klik ikon <em>layer</em> di peta untuk memilih kategori, dan klik titik/bangunan untuk melihat detailnya.
             </p>
-            <p class="text-sm text-[var(--color-foreground)]/70 mt-1">
-              Batas wilayah yang ditampilkan bersifat <strong>perkiraan (dummy data)</strong>. 
-              File shapefile resmi batas desa sedang dalam proses pembuatan. Setelah data resmi tersedia, 
-              batas wilayah akan diperbarui secara otomatis. Koordinat titik fasilitas juga bersifat 
-              perkiraan dan akan dikonfirmasi oleh admin desa melalui CMS.
+          </div>
+        </div>
+        <div class="flex items-start gap-3 rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 p-4">
+          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)]/20 text-[var(--color-accent-dark)]">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-[var(--color-accent-dark)]" style="font-family: var(--font-heading);">Catatan</p>
+            <p class="mt-1 text-sm text-[var(--color-foreground)]/70">
+              Data peta dikelola pada aplikasi WebGIS terpisah dan akan terus diperbarui seiring pemetaan lapangan.
             </p>
           </div>
         </div>
@@ -93,3 +110,19 @@ const sanityFasilitas = await fetchSanity<any[]>(query);
 
   <Footer slot="footer" />
 </BaseLayout>
+
+<script>
+  const frame = document.getElementById("peta-frame");
+  const loader = document.getElementById("peta-loader");
+  if (frame && loader) {
+    frame.addEventListener("load", () => {
+      loader.style.opacity = "0";
+      setTimeout(() => loader.remove(), 500);
+    });
+    // Fallback: sembunyikan loader setelah 8 detik apapun kondisinya
+    setTimeout(() => {
+      loader.style.opacity = "0";
+      setTimeout(() => loader.remove(), 500);
+    }, 8000);
+  }
+</script>
