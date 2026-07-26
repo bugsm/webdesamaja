@@ -1,4 +1,5 @@
 import { defineField, defineType } from "sanity";
+import { maxImageSize } from "./lib/imageMaxSize";
 
 export default defineType({
   name: "potensi",
@@ -46,6 +47,7 @@ export default defineType({
       title: "Gambar Visual (Opsional)",
       type: "image",
       options: { hotspot: true },
+      validation: maxImageSize(5),
     }),
   ],
   preview: {

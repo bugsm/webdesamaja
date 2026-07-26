@@ -1,0 +1,29 @@
+# Konfigurasi deploy Netlify untuk Web Desa Maja (situs Astro statik di folder majaweb/)
+# Repo ini monorepo: `majaweb/` = situs publik, `studio-desa-maja/` = Sanity Studio (dideploy terpisah).
+
+[build]
+  base = "majaweb"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Serverless function (penghitung "jumlah dilihat" berita) — direktori relatif ke base majaweb/.
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Cache aset statik (JS/CSS/gambar ber-hash) selama 1 tahun.
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Header keamanan dasar (tidak menghalangi iframe peta yang kita embed).
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    Referrer-Policy = "strict-origin-when-cross-origin"

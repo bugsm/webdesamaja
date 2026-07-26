@@ -1,4 +1,5 @@
 import { defineField, defineType } from "sanity";
+import { maxImageSize } from "./lib/imageMaxSize";
 
 export default defineType({
   name: "profil",
@@ -41,6 +42,7 @@ export default defineType({
       title: "Foto Kantor / Suasana Desa",
       type: "image",
       options: { hotspot: true },
+      validation: maxImageSize(5),
     }),
     defineField({
       name: "aparat",
@@ -53,7 +55,7 @@ export default defineType({
             { name: "name", title: "Nama Lengkap", type: "string" },
             { name: "gelar", title: "Gelar (Opsional)", type: "string" },
             { name: "position", title: "Jabatan", type: "string" },
-            { name: "photo", title: "Foto", type: "image", options: { hotspot: true } },
+            { name: "photo", title: "Foto", type: "image", options: { hotspot: true }, validation: maxImageSize(5) },
           ],
           preview: {
             select: { title: "name", subtitle: "position", media: "photo" },

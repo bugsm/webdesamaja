@@ -1,4 +1,5 @@
 import { defineType, defineField } from 'sanity'
+import { maxImageSize } from './lib/imageMaxSize'
 
 export const berita = defineType({
   name: 'berita',
@@ -21,7 +22,7 @@ export const berita = defineType({
       }
     }),
     defineField({ name: 'excerpt', title: 'Ringkasan', type: 'text' }),
-    defineField({ name: 'image', title: 'Gambar Utama', type: 'image', options: { hotspot: true } }),
+    defineField({ name: 'image', title: 'Gambar Utama', type: 'image', options: { hotspot: true }, validation: maxImageSize(5) }),
     defineField({ 
       name: 'youtubeUrl', 
       title: 'Link YouTube (Opsional)', 
@@ -29,5 +30,13 @@ export const berita = defineType({
       description: 'Masukkan link video YouTube (contoh: https://www.youtube.com/watch?v=...)'
     }),
     defineField({ name: 'body', title: 'Isi Berita', type: 'array', of: [{ type: 'block' }] }),
+    defineField({
+      name: 'views',
+      title: 'Jumlah Dilihat',
+      type: 'number',
+      initialValue: 0,
+      readOnly: true,
+      description: 'Dihitung otomatis oleh sistem saat pengunjung membuka berita.',
+    }),
   ],
 })
