@@ -1,0 +1,174 @@
+---
+const currentPath = Astro.url.pathname;
+
+const navLinks = [
+  { href: "/", label: "Beranda" },
+  { href: "/profil", label: "Profil Desa" },
+  { href: "/peta", label: "Peta Desa" },
+  { href: "/berita", label: "Berita" },
+  { href: "/potensi", label: "Potensi" },
+  { href: "/kontak", label: "Kontak" },
+];
+---
+
+<header
+  class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-[var(--color-border)] transition-all duration-300"
+  id="main-navbar"
+>
+  <nav class="container-village flex items-center justify-between h-16 md:h-18" aria-label="Navigasi utama">
+    <!-- Logo & Nama Desa -->
+    <a href="/" class="flex items-center gap-3 shrink-0 group" aria-label="Beranda Desa Maja">
+      <div class="w-12 md:w-14 h-12 md:h-14 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+        <img src="/logoku.svg" alt="Logo Desa Maja" class="w-full h-full object-contain" />
+      </div>
+      <div class="block">
+        <p class="font-[var(--font-heading)] font-bold text-[var(--color-primary-dark)] text-lg leading-tight">
+          Desa Maja
+        </p>
+        <p class="text-xs text-[var(--color-muted-foreground)] leading-tight">
+          Kec. Kalianda, Lampung Selatan
+        </p>
+      </div>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <ul class="hidden lg:flex items-center gap-1" role="menubar">
+      {navLinks.map((link) => {
+        const isActive = currentPath === link.href || (link.href !== "/" && currentPath.startsWith(link.href));
+        return (
+          <li role="none">
+            <a
+              href={link.href}
+              role="menuitem"
+              class:list={[
+                "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer",
+                isActive
+                  ? "bg-[var(--color-primary)] text-white shadow-sm"
+                  : "text-[var(--color-foreground)] hover:bg-[var(--color-muted)] hover:text-[var(--color-primary)]",
+              ]}
+              aria-current={isActive ? "page" : undefined}
+            >
+              {link.label}
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+
+    <!-- Mobile Menu Button -->
+    <button
+      type="button"
+      class="lg:hidden p-2 rounded-lg text-[var(--color-foreground)] hover:bg-[var(--color-muted)] transition-colors duration-200 cursor-pointer"
+      id="mobile-menu-btn"
+      aria-expanded="false"
+      aria-controls="mobile-menu"
+      aria-label="Buka menu navigasi"
+    >
+      <svg id="menu-icon-open" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+      <svg id="menu-icon-close" class="w-6 h-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </nav>
+</header>
+
+<!-- Mobile Menu Backdrop -->
+<div id="mobile-menu-backdrop" class="fixed inset-0 top-[64px] bg-black/40 z-[45] hidden lg:hidden backdrop-blur-sm transition-opacity"></div>
+  
+<!-- Mobile Menu Drawer -->
+<div
+  id="mobile-menu"
+  class="fixed top-[64px] right-0 bottom-0 w-full sm:w-80 max-w-[100vw] bg-[var(--color-surface)] z-[60] transform translate-x-full transition-transform duration-300 ease-in-out lg:hidden flex flex-col border-l border-[var(--color-border)] shadow-2xl"
+  role="menu"
+>
+    <ul class="pt-2 space-y-0 overflow-y-auto w-full">
+      {navLinks.map((link, index) => {
+        const isActive = currentPath === link.href || (link.href !== "/" && currentPath.startsWith(link.href));
+        const num = String(index + 1).padStart(2, '0');
+        return (
+          <li role="none" class="border-b border-[var(--color-border)] opacity-0 translate-y-4 transition-all duration-300 mobile-menu-item">
+            <a
+              href={link.href}
+              role="menuitem"
+              class:list={[
+                "flex items-center w-full px-6 py-4 transition-colors duration-200",
+                isActive
+                  ? "bg-[var(--color-primary)] text-white"
+                  : "bg-transparent text-[var(--color-foreground)] hover:bg-[var(--color-muted)]",
+              ]}
+            >
+              <span class:list={["text-xs font-semibold mr-5", isActive ? "text-white/70" : "text-[var(--color-primary)]"]}>{num}</span>
+              <span class="text-lg font-bold font-[var(--font-heading)] tracking-tight">{link.label}</span>
+              <span class="ml-auto">
+                <svg class="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+                </svg>
+              </span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+
+<script>
+  const menuBtn = document.getElementById("mobile-menu-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+  const iconOpen = document.getElementById("menu-icon-open");
+  const iconClose = document.getElementById("menu-icon-close");
+
+  const backdrop = document.getElementById("mobile-menu-backdrop");
+  const menuItems = document.querySelectorAll(".mobile-menu-item");
+
+  if (menuBtn && mobileMenu && iconOpen && iconClose) {
+    const closeMenu = () => {
+      mobileMenu.classList.remove("translate-x-0");
+      mobileMenu.classList.add("translate-x-full");
+      if (backdrop) backdrop.classList.add("hidden");
+      menuBtn.setAttribute("aria-expanded", "false");
+      iconOpen.classList.remove("hidden");
+      iconClose.classList.add("hidden");
+      
+      // Reset items animation
+      menuItems.forEach(item => {
+        item.classList.remove("!opacity-100", "!translate-y-0");
+        (item as HTMLElement).style.transitionDelay = "0ms";
+      });
+    };
+
+    menuBtn.addEventListener("click", () => {
+      const isExpanded = menuBtn.getAttribute("aria-expanded") === "true";
+      menuBtn.setAttribute("aria-expanded", String(!isExpanded));
+      
+      if (!isExpanded) {
+        // Open
+        mobileMenu.classList.remove("hidden"); // just in case
+        mobileMenu.classList.remove("translate-x-full");
+        mobileMenu.classList.add("translate-x-0");
+        if (backdrop) backdrop.classList.remove("hidden");
+        
+        // Animate items with stagger
+        menuItems.forEach((item, idx) => {
+          (item as HTMLElement).style.transitionDelay = `${150 + (idx * 60)}ms`;
+          item.classList.add("!opacity-100", "!translate-y-0");
+        });
+      } else {
+        closeMenu();
+      }
+
+      iconOpen.classList.toggle("hidden");
+      iconClose.classList.toggle("hidden");
+    });
+
+    if (backdrop) {
+      backdrop.addEventListener("click", closeMenu);
+    }
+
+    // Close menu on link click
+    mobileMenu.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", closeMenu);
+    });
+  }
+</script>

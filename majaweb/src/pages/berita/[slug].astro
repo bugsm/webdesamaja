@@ -1,0 +1,134 @@
+---
+import "../../styles/global.css";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+import { fetchSanity, urlForImage } from "../../utils/sanity";
+import { PortableText } from "@portabletext/react";
+
+export async function getStaticPaths() {
+  const query = `*[_type == "berita" && defined(slug.current)]{ "params": { "slug": slug.current } }`;
+  const slugs = await fetchSanity<any[]>(query);
+  
+  if (!slugs || slugs.length === 0) {
+    return [
+      { params: { slug: "fallback-berita" } }
+    ];
+  }
+  return slugs;
+}
+
+const { slug } = Astro.params;
+const query = `*[_type == "berita" && slug.current == $slug][0]{ title, excerpt, date, category, image, youtubeUrl, body }`;
+const post = await fetchSanity<any>(query, { slug });
+
+if (!post && slug !== "fallback-berita") {
+  return Astro.redirect('/404');
+}
+
+const displayPost = post || {
+  title: "Berita Tidak Ditemukan",
+  date: "2026-01-01",
+  category: "Umum",
+  excerpt: "Silakan periksa kembali URL atau pastikan koneksi ke Sanity berjalan dengan baik.",
+  body: null,
+  image: null,
+  youtubeUrl: null
+};
+
+// Helper untuk convert YouTube link ke Embed URL
+function getYouTubeEmbedUrl(url: string) {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  const videoId = (match && match[2].length === 11) ? match[2] : null;
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+}
+
+const youtubeEmbedUrl = getYouTubeEmbedUrl(displayPost.youtubeUrl);
+---
+
+<BaseLayout title={displayPost.title} description={displayPost.excerpt}>
+  <Navbar slot="header" />
+  
+  <main class="bg-white">
+    <article class="pt-12 md:pt-16 pb-20">
+      
+      {/* Bagian Header (Judul & Meta) */}
+      <div class="max-w-[680px] mx-auto px-5 md:px-0 mb-8 md:mb-10">
+        <h1 class="text-3xl md:text-[42px] font-bold text-[#242424] leading-[1.25] tracking-tight mb-8" style="font-family: var(--font-heading), sans-serif;">
+          {displayPost.title}
+        </h1>
+
+        <div class="flex items-center gap-4 text-[#6B6B6B]">
+          <div class="w-12 h-12 rounded-full bg-gray-200 overflow-hidden shrink-0">
+            <img 
+              src="https://ui-avatars.com/api/?name=Admin+Desa&background=0D8ABC&color=fff&size=100" 
+              alt="Admin Desa" 
+              class="w-full h-full object-cover" 
+            />
+          </div>
+          <div>
+            <div class="font-medium text-[#242424] text-base">Admin Desa Maja</div>
+            <div class="text-[14px] flex items-center gap-2 mt-0.5">
+              <span>{displayPost.date ? new Date(displayPost.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}</span>
+              <span>·</span>
+              <span class="bg-gray-100 px-2.5 py-0.5 rounded-full text-xs font-medium text-gray-700">
+                {displayPost.category || 'Berita'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bagian Gambar / Video Utama (Lebih lebar dari teks) */}
+      <div class="max-w-[1000px] mx-auto mb-10 md:mb-14 px-5 md:px-0">
+        {youtubeEmbedUrl ? (
+          <div class="w-full aspect-video rounded-xl md:rounded-2xl overflow-hidden shadow-sm bg-gray-100">
+            <iframe 
+              src={youtubeEmbedUrl} 
+              title="YouTube video player" 
+              class="w-full h-full border-0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowfullscreen>
+            </iframe>
+          </div>
+        ) : displayPost.image ? (
+          <div class="w-full relative rounded-xl md:rounded-2xl overflow-hidden shadow-sm bg-gray-100 aspect-video md:aspect-[16/7] max-h-[500px]">
+            <img 
+              src={urlForImage(displayPost.image).url()} 
+              alt={displayPost.title}
+              class="w-full h-full object-cover object-center"
+            />
+          </div>
+        ) : null}
+      </div>
+
+      {/* Bagian Konten Artikel (Kolom sempit agar nyaman dibaca) */}
+      <div class="max-w-[680px] mx-auto px-5 md:px-0">
+        <div class="prose prose-lg max-w-none text-[#242424] 
+            prose-p:font-serif prose-p:leading-[1.8] prose-p:text-[20px] 
+            prose-headings:font-sans prose-headings:font-bold prose-headings:text-[#242424] prose-headings:tracking-tight
+            prose-a:text-[#1a8917] hover:prose-a:underline prose-img:rounded-xl prose-img:my-10 prose-hr:my-10">
+          {displayPost.body ? (
+            <PortableText value={displayPost.body} />
+          ) : (
+            <p class="italic text-gray-500 font-serif">{displayPost.excerpt}</p>
+          )}
+        </div>
+        
+        {/* Navigasi Footer Artikel */}
+        <div class="mt-16 pt-8 border-t border-gray-200 flex justify-between items-center">
+          <a href="/berita" class="inline-flex items-center gap-2 text-gray-600 hover:text-black transition-colors font-medium">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Kembali ke Daftar Berita
+          </a>
+        </div>
+      </div>
+    </article>
+  </main>
+  
+  <Footer slot="footer" />
+</BaseLayout>

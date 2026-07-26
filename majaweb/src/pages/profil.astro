@@ -1,0 +1,219 @@
+---
+import "../styles/global.css";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import SectionHeading from "../components/SectionHeading.astro";
+import OrgChart from "../components/react/OrgChart";
+import PopulationChart from "../components/react/PopulationChart";
+import ScrollReveal from "../components/react/ScrollReveal";
+import { fetchSanity } from "../utils/sanity";
+import { PortableText } from "@portabletext/react";
+
+const query = `*[_type == "profil"][0] {
+  sejarah, visi, misi, aparat
+}`;
+const sanityProfil = await fetchSanity<any>(query);
+
+// Ambil data statistik dari Sanity
+const statsQuery = `*[_type == "statistik"][0]`;
+const sanityStats = await fetchSanity<any>(statsQuery);
+
+// Fallbacks are handled inside components or hardcoded below for text
+const visi = sanityProfil?.visi || "Menjadi desa wisata yang mandiri, berbudaya, dan berwawasan lingkungan menuju masyarakat yang sejahtera.";
+const misi = sanityProfil?.misi || [
+  "Meningkatkan kualitas pelayanan publik melalui tata kelola pemerintahan desa yang baik dan transparan.",
+  "Mendorong partisipasi aktif masyarakat dalam pembangunan dan pengembangan potensi lokal.",
+  "Mengoptimalkan pengelolaan sumber daya alam dengan tetap menjaga kelestarian lingkungan.",
+  "Meningkatkan pemberdayaan ekonomi kerakyatan melalui dukungan terhadap UMKM dan sektor pariwisata.",
+];
+---
+
+<BaseLayout title="Profil Desa" description="Profil lengkap Desa Maja: sejarah, visi misi, struktur organisasi perangkat desa, dan data statistik kependudukan.">
+  <Navbar slot="header" />
+
+  <!-- Page Hero -->
+  <section class="bg-[var(--color-primary-dark)] py-16 md:py-20">
+    <div class="container-village text-center">
+      <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4" style="font-family: var(--font-heading);">
+        Profil Desa Maja
+      </h1>
+      <p class="text-white/70 text-base md:text-lg max-w-2xl mx-auto">
+        Mengenal lebih dekat sejarah, visi misi, dan pemerintahan Desa Maja, 
+        Kecamatan Kalianda, Kabupaten Lampung Selatan.
+      </p>
+      <div class="mt-4 h-1 w-16 rounded-full bg-[var(--color-accent)] mx-auto"></div>
+    </div>
+  </section>
+
+  <!-- Sejarah Desa -->
+  <section class="section-padding bg-[var(--color-background)]">
+    <div class="container-village">
+      <ScrollReveal client:visible>
+        <div class="max-w-4xl mx-auto">
+          <SectionHeading title="Sejarah Desa" />
+          <div class="prose prose-lg max-w-none text-[var(--color-foreground)]/80 space-y-4 leading-relaxed">
+            {sanityProfil?.sejarah ? (
+              <PortableText value={sanityProfil.sejarah} />
+            ) : (
+              <>
+                <p>
+                  Desa Maja merupakan salah satu desa yang terletak di Kecamatan Kalianda, 
+                  Kabupaten Lampung Selatan, Provinsi Lampung. Desa ini memiliki sejarah panjang 
+                  yang erat kaitannya dengan perkembangan masyarakat agraris di wilayah pesisir 
+                  selatan Lampung.
+                </p>
+                <p>
+                  Nama "Maja" berasal dari nama pohon maja (<em>Aegle marmelos</em>) yang dahulu 
+                  banyak tumbuh di wilayah ini. Pohon maja dikenal sebagai pohon yang kuat dan 
+                  bertahan dalam berbagai kondisi alam, mencerminkan semangat dan ketangguhan 
+                  masyarakat desa.
+                </p>
+                <p>
+                  Pada masa awal pembentukannya, Desa Maja dihuni oleh masyarakat pribumi Lampung 
+                  yang bermata pencaharian sebagai petani dan nelayan. Seiring berjalannya waktu, 
+                  desa ini berkembang menjadi desa yang lebih maju dengan berbagai fasilitas 
+                  pelayanan publik dan infrastruktur yang terus dibangun.
+                </p>
+                <p class="text-xs text-[var(--color-muted-foreground)] italic">
+                  * Konten sejarah bersifat ilustrasi. Data resmi akan diperbarui melalui admin CMS.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      </ScrollReveal>
+    </div>
+  </section>
+
+  <!-- Visi & Misi -->
+  <section class="section-padding bg-white">
+    <div class="container-village">
+      <SectionHeading title="Visi & Misi" />
+      
+      <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+        <!-- Visi -->
+        <ScrollReveal client:visible direction="left">
+          <div class="bg-[var(--color-primary-dark)] rounded-2xl p-8 text-white h-full">
+            <div class="w-12 h-12 rounded-xl bg-[var(--color-accent)] flex items-center justify-center mb-5">
+              <svg class="w-6 h-6 text-[var(--color-primary-dark)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold mb-4 text-white" style="font-family: var(--font-heading);">
+              Visi
+            </h3>
+            <p class="text-lg leading-relaxed font-medium">
+              "{visi}"
+            </p>
+          </div>
+        </ScrollReveal>
+
+        <!-- Misi -->
+        <ScrollReveal client:visible direction="right">
+          <div class="bg-[var(--color-background)] rounded-2xl p-8 border border-[var(--color-border)] h-full">
+            <div class="w-12 h-12 rounded-xl bg-[var(--color-primary)]/10 flex items-center justify-center mb-5">
+              <svg class="w-6 h-6 text-[var(--color-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold mb-4 text-[var(--color-primary-dark)]" style="font-family: var(--font-heading);">
+              Misi
+            </h3>
+            <ul class="space-y-4">
+              {misi.map((item: string, index: number) => (
+                <li class="flex items-start gap-4">
+                  <span class="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--color-accent)]/20 text-[var(--color-primary-dark)] flex items-center justify-center font-bold text-sm">
+                    {index + 1}
+                  </span>
+                  <span class="text-[var(--color-foreground)]/80 pt-1">
+                    {item}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </ScrollReveal>
+      </div>
+    </div>
+  </section>
+
+  <!-- Struktur Organisasi -->
+  <section class="section-padding bg-[var(--color-background)]">
+    <div class="container-village">
+      <SectionHeading
+        title="Struktur Organisasi"
+        subtitle="Perangkat Pemerintah Desa Maja"
+      />
+      <div class="mt-12">
+        <OrgChart client:visible officials={sanityProfil?.aparat} />
+      </div>
+    </div>
+  </section>
+
+  <!-- Data Statistik Penduduk -->
+  <section class="section-padding bg-white">
+    <div class="container-village">
+      <SectionHeading
+        title="Data Statistik Penduduk"
+        subtitle="Komposisi penduduk Desa Maja berdasarkan dusun dan jenis kelamin"
+      />
+      <div class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+        <PopulationChart client:only="react" data={sanityStats?.dataDusun} />
+      </div>
+
+      {/* Ringkasan tabel */}
+      <ScrollReveal client:visible>
+        <div class="max-w-4xl mx-auto mt-10 overflow-x-auto">
+          <table class="w-full text-sm border-collapse">
+            <thead>
+              <tr class="bg-[var(--color-primary-dark)] text-white">
+                <th class="px-4 py-3 text-left rounded-tl-lg">Dusun</th>
+                <th class="px-4 py-3 text-center">Laki-laki</th>
+                <th class="px-4 py-3 text-center">Perempuan</th>
+                <th class="px-4 py-3 text-center">Jumlah</th>
+                <th class="px-4 py-3 text-center rounded-tr-lg">KK</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(sanityStats?.dataDusun || [
+                { namaDusun: "Dusun 1", laki: 520, perempuan: 490, kk: 290 },
+                { namaDusun: "Dusun 2", laki: 430, perempuan: 410, kk: 241 },
+                { namaDusun: "Dusun 3", laki: 380, perempuan: 360, kk: 212 },
+              ]).map((row: any, i: number) => (
+                <tr class={i % 2 === 0 ? "bg-[var(--color-background)]" : "bg-white"}>
+                  <td class="px-4 py-3 font-medium text-[var(--color-foreground)]">{row.namaDusun}</td>
+                  <td class="px-4 py-3 text-center">{Number(row.laki).toLocaleString('id-ID')}</td>
+                  <td class="px-4 py-3 text-center">{Number(row.perempuan).toLocaleString('id-ID')}</td>
+                  <td class="px-4 py-3 text-center font-semibold">{(Number(row.laki) + Number(row.perempuan)).toLocaleString('id-ID')}</td>
+                  <td class="px-4 py-3 text-center">{Number(row.kk).toLocaleString('id-ID')}</td>
+                </tr>
+              ))}
+              <tr class="bg-[var(--color-primary)] text-white font-bold">
+                <td class="px-4 py-3 rounded-bl-lg">Total</td>
+                <td class="px-4 py-3 text-center">
+                  {(sanityStats?.dataDusun || []).reduce((acc: number, curr: any) => acc + Number(curr.laki || 0), 0).toLocaleString('id-ID')}
+                </td>
+                <td class="px-4 py-3 text-center">
+                  {(sanityStats?.dataDusun || []).reduce((acc: number, curr: any) => acc + Number(curr.perempuan || 0), 0).toLocaleString('id-ID')}
+                </td>
+                <td class="px-4 py-3 text-center">
+                  {(sanityStats?.dataDusun || []).reduce((acc: number, curr: any) => acc + Number(curr.laki || 0) + Number(curr.perempuan || 0), 0).toLocaleString('id-ID')}
+                </td>
+                <td class="px-4 py-3 text-center rounded-br-lg">
+                  {(sanityStats?.dataDusun || []).reduce((acc: number, curr: any) => acc + Number(curr.kk || 0), 0).toLocaleString('id-ID')}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="mt-3 text-xs text-[var(--color-muted-foreground)] text-center italic">
+            * Data bersifat ilustrasi. Data resmi akan diperbarui melalui admin CMS.
+          </p>
+        </div>
+      </ScrollReveal>
+    </div>
+  </section>
+
+  <Footer slot="footer" />
+</BaseLayout>
