@@ -90,10 +90,6 @@ export default function PopulationChart({ data }: { data?: DusunData[] }) {
           );
         })}
       </div>
-
-      <p className="mt-4 text-center text-xs text-[var(--color-muted-foreground)]/80">
-        Sumber: data kependudukan Desa Maja (dapat diperbarui melalui admin).
-      </p>
     </div>
   );
 }

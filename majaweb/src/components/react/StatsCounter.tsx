@@ -109,11 +109,6 @@ export default function StatsCounter({ sanityStats }: { sanityStats?: any }) {
             </motion.div>
           ))}
         </div>
-
-        {/* Data disclaimer */}
-        <p className="mt-6 text-center text-xs text-[#6B7280]/70">
-          * Data bersifat ilustrasi. Data resmi akan diperbarui melalui admin CMS.
-        </p>
       </div>
     </section>
   );

@@ -3,16 +3,61 @@ export interface Props {
   title: string;
   description?: string;
   ogImage?: string;
+  /** Set true khusus halaman utama agar judul lebih SEO-friendly */
+  isHome?: boolean;
 }
 
 const {
   title,
-  description = "Website resmi Desa Maja, Kecamatan Kalianda, Kabupaten Lampung Selatan, Provinsi Lampung. Informasi profil desa, peta wilayah, berita, dan potensi desa.",
-  ogImage = "/images/og-default.jpg",
+  description = "Website resmi Desa Maja, Kecamatan Kalianda, Kabupaten Lampung Selatan, Provinsi Lampung. Informasi profil desa, peta wilayah, berita terkini, dan potensi Desa Maja.",
+  ogImage = "/images/hero-desa.jpg",
+  isHome = false,
 } = Astro.props;
 
-const siteTitle = `${title} — Desa Maja`;
-const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? "https://desamaja.id");
+const SITE = Astro.site ?? new URL("https://desamaja.my.id");
+const siteName = "Desa Maja";
+const siteTitle = isHome
+  ? "Desa Maja — Website Resmi Pemerintah Desa Maja, Kalianda, Lampung Selatan"
+  : `${title} — Desa Maja`;
+
+const canonicalURL = new URL(Astro.url.pathname, SITE);
+const ogImageURL = new URL(ogImage, SITE).href;
+
+// Data terstruktur (JSON-LD) untuk hasil pencarian yang lebih kaya
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "GovernmentOrganization",
+      "@id": `${SITE.origin}/#organization`,
+      name: "Pemerintah Desa Maja",
+      alternateName: "Desa Maja",
+      url: SITE.origin,
+      logo: `${SITE.origin}/logoku.svg`,
+      image: ogImageURL,
+      email: "desamaja20@gmail.com",
+      areaServed: "Desa Maja, Kecamatan Kalianda, Kabupaten Lampung Selatan",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Desa Maja",
+        addressLocality: "Kalianda",
+        addressRegion: "Lampung Selatan",
+        addressCountry: "ID",
+        postalCode: "35513",
+      },
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE.origin}/#website`,
+      url: SITE.origin,
+      name: siteName,
+      description:
+        "Website resmi Desa Maja, Kecamatan Kalianda, Kabupaten Lampung Selatan.",
+      publisher: { "@id": `${SITE.origin}/#organization` },
+      inLanguage: "id-ID",
+    },
+  ],
+};
 ---
 
 <!doctype html>
@@ -20,23 +65,44 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? "https://desamaja
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{siteTitle}</title>
     <meta name="description" content={description} />
     <meta name="author" content="Pemerintah Desa Maja" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="keywords" content="Desa Maja, desamaja, Desa Maja Kalianda, Desa Maja Lampung Selatan, website desa maja, profil desa maja, berita desa maja, peta desa maja, potensi desa maja" />
+    <meta name="theme-color" content="#15803d" />
+
+    <!-- Geo -->
+    <meta name="geo.region" content="ID-LA" />
+    <meta name="geo.placename" content="Desa Maja, Kalianda, Lampung Selatan" />
+    <meta name="geo.position" content="-5.783;105.580" />
+    <meta name="ICBM" content="-5.783, 105.580" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href={canonicalURL.href} />
 
     <!-- Open Graph -->
+    <meta property="og:site_name" content={siteName} />
     <meta property="og:title" content={siteTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={ogImage} />
+    <meta property="og:image" content={ogImageURL} />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="id_ID" />
     <meta property="og:url" content={canonicalURL.href} />
 
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={siteTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL} />
+
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/logoku.svg" />
     <link rel="icon" type="image/x-icon" href="/logoku.svg" />
+    <link rel="apple-touch-icon" href="/logoku.svg" />
 
-    <!-- Canonical -->
-    <link rel="canonical" href={canonicalURL.href} />
+    <!-- Sitemap -->
+    <link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
 
     <!-- Google Fonts: Lexend (heading) + Inter (body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -46,7 +112,8 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? "https://desamaja
       rel="stylesheet"
     />
 
-    <title>{siteTitle}</title>
+    <!-- Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
   <body class="min-h-screen flex flex-col bg-grid text-[var(--color-foreground)] overflow-x-hidden">
     <slot name="header" />

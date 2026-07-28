@@ -39,7 +39,7 @@ const displayPost = post || {
 };
 
 // URL kanonik untuk tombol bagikan
-const shareUrl = new URL(Astro.url.pathname, Astro.site ?? "https://desamaja.id").href;
+const shareUrl = new URL(Astro.url.pathname, Astro.site ?? "https://desamaja.my.id").href;
 const shareText = displayPost.title;
 const shareLinks = {
   facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
@@ -73,7 +73,11 @@ function getYouTubeEmbedUrl(url: string) {
 const youtubeEmbedUrl = getYouTubeEmbedUrl(displayPost.youtubeUrl);
 ---
 
-<BaseLayout title={displayPost.title} description={displayPost.excerpt}>
+<BaseLayout
+  title={displayPost.title}
+  description={displayPost.excerpt}
+  ogImage={displayPost.image ? urlForImage(displayPost.image).width(1200).height(630).fit("crop").url() : undefined}
+>
   <Navbar slot="header" />
   
   <main class="bg-white">

@@ -87,10 +87,6 @@ export default function OrgChart({ officials = fallbackOfficials }: { officials?
           </motion.div>
         ))}
       </div>
-
-      <p className="mt-6 text-center text-xs text-[#6B7280]/70">
-        * Nama dan jabatan bersifat ilustrasi. Data resmi akan diperbarui melalui admin CMS.
-      </p>
     </div>
   );
 }
