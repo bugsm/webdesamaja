@@ -41,7 +41,6 @@ export default defineConfig({
           .items([
             S.documentTypeListItem('berita').title('Berita'),
             S.documentTypeListItem('potensi').title('Potensi Desa'),
-            S.documentTypeListItem('fasilitas').title('Fasilitas (Peta)'),
             S.documentTypeListItem('statistik').title('Statistik Desa'),
             S.documentTypeListItem('profil').title('Profil Desa'),
           ])

@@ -140,26 +140,28 @@ const navLinks = [
 
     menuBtn.addEventListener("click", () => {
       const isExpanded = menuBtn.getAttribute("aria-expanded") === "true";
-      menuBtn.setAttribute("aria-expanded", String(!isExpanded));
-      
+
       if (!isExpanded) {
         // Open
+        menuBtn.setAttribute("aria-expanded", "true");
         mobileMenu.classList.remove("hidden"); // just in case
         mobileMenu.classList.remove("translate-x-full");
         mobileMenu.classList.add("translate-x-0");
         if (backdrop) backdrop.classList.remove("hidden");
-        
+
+        // Tampilkan ikon "X"
+        iconOpen.classList.add("hidden");
+        iconClose.classList.remove("hidden");
+
         // Animate items with stagger
         menuItems.forEach((item, idx) => {
           (item as HTMLElement).style.transitionDelay = `${150 + (idx * 60)}ms`;
           item.classList.add("!opacity-100", "!translate-y-0");
         });
       } else {
+        // closeMenu() sudah mengembalikan aria & ikon ke hamburger
         closeMenu();
       }
-
-      iconOpen.classList.toggle("hidden");
-      iconClose.classList.toggle("hidden");
     });
 
     if (backdrop) {

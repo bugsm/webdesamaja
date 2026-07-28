@@ -3,12 +3,13 @@ import "../../styles/global.css";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Navbar from "../../components/Navbar.astro";
 import Footer from "../../components/Footer.astro";
-import SectionHeading from "../../components/SectionHeading.astro";
-import NewsCard from "../../components/react/NewsCard";
+import BeritaListing from "../../components/BeritaListing.astro";
 
 import { fetchSanity, urlForImage } from "../../utils/sanity";
 
-// Placeholder berita (nanti dari Sanity CMS)
+const PAGE_SIZE = 10;
+
+// Placeholder bila Sanity kosong
 const fallbackNews = [
   {
     title: "Musyawarah Desa Bahas Pembangunan Jalan Dusun 3",
@@ -16,56 +17,26 @@ const fallbackNews = [
     date: "2026-07-15",
     category: "Pembangunan",
     slug: { current: "musyawarah-desa-pembangunan-jalan" },
-  },
-  {
-    title: "Pelatihan UMKM Digital untuk Warga Desa Maja",
-    excerpt: "Dalam rangka meningkatkan ekonomi desa, diadakan pelatihan pemasaran digital bagi pelaku UMKM desa.",
-    date: "2026-07-10",
-    category: "Kegiatan",
-    slug: { current: "pelatihan-umkm-digital" },
-  },
-  {
-    title: "Pengumuman: Jadwal Posyandu Bulan Juli 2026",
-    excerpt: "Posyandu Mawar Desa Maja mengumumkan jadwal pelayanan bulan Juli 2026 untuk seluruh dusun.",
-    date: "2026-07-05",
-    category: "Pengumuman",
-    slug: { current: "jadwal-posyandu-juli-2026" },
-  },
-  {
-    title: "Gotong Royong Bersihkan Sungai Desa",
-    excerpt: "Warga Desa Maja secara serentak melakukan kegiatan gotong royong membersihkan aliran sungai yang melintasi wilayah desa.",
-    date: "2026-06-28",
-    category: "Kegiatan",
-    slug: { current: "gotong-royong-bersihkan-sungai" },
-  },
-  {
-    title: "Distribusi Bantuan Sosial Tahap III 2026",
-    excerpt: "Pemerintah Desa Maja mendistribusikan bantuan sosial tahap ketiga tahun 2026 kepada warga yang berhak menerima.",
-    date: "2026-06-20",
-    category: "Pengumuman",
-    slug: { current: "distribusi-bansos-tahap-3" },
-  },
-  {
-    title: "Pembangunan Drainase Dusun 1 Selesai",
-    excerpt: "Proyek pembangunan saluran drainase sepanjang 500 meter di Dusun 1 telah resmi selesai dan diresmikan oleh Kepala Desa.",
-    date: "2026-06-15",
-    category: "Pembangunan",
-    slug: { current: "pembangunan-drainase-dusun-1" },
+    image: null,
   },
 ];
 
+// Ambil semua berita (urut terbaru), lalu ambil 10 pertama untuk halaman 1
 const query = `*[_type == "berita"] | order(date desc) {
   title, excerpt, date, category, slug, image
 }`;
 const sanityNews = await fetchSanity<any[]>(query);
-const allNews = sanityNews || fallbackNews;
+const allNews = sanityNews && sanityNews.length > 0 ? sanityNews : fallbackNews;
 
-// Lazy-load: hanya batch awal yang dirender terlihat; sisanya disembunyikan
-// (gambar `loading="lazy"` di dalamnya baru diunduh saat item ditampilkan).
-const INITIAL_COUNT = 9;
-const BATCH_COUNT = 6;
-
-const categories = ["Semua", "Pengumuman", "Kegiatan", "Pembangunan"];
+const totalPages = Math.max(1, Math.ceil(allNews.length / PAGE_SIZE));
+const posts = allNews.slice(0, PAGE_SIZE).map((n) => ({
+  title: n.title,
+  excerpt: n.excerpt,
+  date: n.date,
+  category: n.category,
+  slug: n.slug?.current || n.slug,
+  image: n.image ? urlForImage(n.image).width(800).height(600).url() : undefined,
+}));
 ---
 
 <BaseLayout title="Berita" description="Berita dan informasi terkini dari Desa Maja. Pengumuman, kegiatan, pembangunan, dan informasi penting lainnya untuk warga desa.">
@@ -78,91 +49,19 @@ const categories = ["Semua", "Pengumuman", "Kegiatan", "Pembangunan"];
         Berita Desa
       </h1>
       <p class="text-white/70 text-base md:text-lg max-w-2xl mx-auto">
-        Informasi terkini seputar kegiatan, pembangunan, dan pengumuman penting 
+        Informasi terkini seputar kegiatan, pembangunan, dan pengumuman penting
         dari Pemerintah Desa Maja.
       </p>
       <div class="mt-4 h-1 w-16 rounded-full bg-[var(--color-accent)] mx-auto"></div>
     </div>
   </section>
 
-  <!-- Category Filter -->
-  <section class="bg-white border-b border-[var(--color-border)] sticky top-16 md:top-18 z-40">
-    <div class="container-village py-4">
-      <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-        {categories.map((cat, i) => (
-          <button
-            class:list={[
-              "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 cursor-pointer",
-              i === 0
-                ? "bg-[var(--color-primary)] text-white"
-                : "bg-[var(--color-muted)] text-[var(--color-foreground)] hover:bg-[var(--color-primary)]/10",
-            ]}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- News Grid -->
-  <section class="section-padding bg-[var(--color-background)]">
+  <!-- News Grid + Pagination -->
+  <section class="section-padding bg-transparent">
     <div class="container-village">
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8" id="news-grid">
-        {allNews.map((news, index) => (
-          <div
-            class:list={["news-item h-full", index >= INITIAL_COUNT && "hidden"]}
-            data-news-item
-          >
-            <NewsCard
-              client:visible
-              title={news.title}
-              excerpt={news.excerpt}
-              date={news.date}
-              category={news.category}
-              slug={news.slug?.current || news.slug}
-              image={news.image ? urlForImage(news.image).width(800).height(600).url() : undefined}
-            />
-          </div>
-        ))}
-      </div>
-
-      {/* Tombol Muat Lebih Banyak — memuat gambar hanya saat ditampilkan (hemat kuota) */}
-      <div class="mt-10 text-center">
-        <button
-          type="button"
-          id="load-more-btn"
-          class:list={[
-            "inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[var(--color-primary)] text-white font-semibold hover:bg-[var(--color-primary-light)] transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg",
-            allNews.length <= INITIAL_COUNT && "hidden",
-          ]}
-          data-batch={BATCH_COUNT}
-        >
-          Muat Lebih Banyak
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-          </svg>
-        </button>
-      </div>
+      <BeritaListing posts={posts} currentPage={1} totalPages={totalPages} />
     </div>
   </section>
 
   <Footer slot="footer" />
 </BaseLayout>
-
-<script>
-  const btn = document.getElementById("load-more-btn");
-  if (btn) {
-    const batch = Number(btn.getAttribute("data-batch")) || 6;
-    btn.addEventListener("click", () => {
-      const hidden = Array.from(
-        document.querySelectorAll<HTMLElement>("[data-news-item].hidden")
-      );
-      hidden.slice(0, batch).forEach((el) => el.classList.remove("hidden"));
-      // Sembunyikan tombol bila semua berita sudah tampil
-      if (hidden.length <= batch) {
-        btn.classList.add("hidden");
-      }
-    });
-  }
-</script>

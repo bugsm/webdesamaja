@@ -47,7 +47,7 @@ const misi = sanityProfil?.misi || [
   </section>
 
   <!-- Sejarah Desa -->
-  <section class="section-padding bg-[var(--color-background)]">
+  <section class="section-padding bg-transparent">
     <div class="container-village">
       <ScrollReveal client:visible>
         <div class="max-w-4xl mx-auto">
@@ -87,7 +87,7 @@ const misi = sanityProfil?.misi || [
   </section>
 
   <!-- Visi & Misi -->
-  <section class="section-padding bg-white">
+  <section class="section-padding bg-transparent">
     <div class="container-village">
       <SectionHeading title="Visi & Misi" />
       
@@ -140,7 +140,7 @@ const misi = sanityProfil?.misi || [
   </section>
 
   <!-- Struktur Organisasi -->
-  <section class="section-padding bg-[var(--color-background)]">
+  <section class="section-padding bg-transparent">
     <div class="container-village">
       <SectionHeading
         title="Struktur Organisasi"
@@ -153,14 +153,14 @@ const misi = sanityProfil?.misi || [
   </section>
 
   <!-- Data Statistik Penduduk -->
-  <section class="section-padding bg-white">
+  <section class="section-padding bg-transparent">
     <div class="container-village">
       <SectionHeading
         title="Data Statistik Penduduk"
         subtitle="Komposisi penduduk Desa Maja berdasarkan dusun dan jenis kelamin"
       />
       <div class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
-        <PopulationChart client:only="react" data={sanityStats?.dataDusun} />
+        <PopulationChart data={sanityStats?.dataDusun} />
       </div>
 
       {/* Ringkasan tabel */}

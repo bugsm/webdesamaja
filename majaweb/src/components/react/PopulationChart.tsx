@@ -1,131 +1,98 @@
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-import { Bar } from "react-chartjs-2";
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+// Grafik penduduk per dusun — CSS murni (tanpa library chart), ringan & pasti
+// tampil (di-render statik, tak bergantung hidrasi/JS).
 
 export interface DusunData {
-  dusun: string;
+  // Sanity memakai `namaDusun`; `dusun` didukung untuk kompatibilitas lama.
+  namaDusun?: string;
+  dusun?: string;
   laki: number;
   perempuan: number;
   kk: number;
 }
 
 const fallbackData: DusunData[] = [
-  { dusun: "Dusun 1 (Maja Induk)", laki: 450, perempuan: 480, kk: 210 },
-  { dusun: "Dusun 2 (Maja Pesisir)", laki: 380, perempuan: 395, kk: 185 },
-  { dusun: "Dusun 3 (Suka Maju)", laki: 320, perempuan: 310, kk: 150 },
+  { namaDusun: "Dusun 1 (Maja Induk)", laki: 450, perempuan: 480, kk: 210 },
+  { namaDusun: "Dusun 2 (Maja Pesisir)", laki: 380, perempuan: 395, kk: 185 },
+  { namaDusun: "Dusun 3 (Suka Maju)", laki: 320, perempuan: 310, kk: 150 },
 ];
 
-const options = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: "top" as const,
-      labels: {
-        font: {
-          family: "'Source Sans 3', sans-serif",
-          size: 13,
-        },
-        usePointStyle: true,
-        pointStyle: "rectRounded",
-        padding: 20,
-      },
-    },
-    title: {
-      display: true,
-      text: "Jumlah Penduduk per Dusun",
-      font: {
-        family: "'Lexend', sans-serif",
-        size: 16,
-        weight: 700 as const,
-      },
-      color: "#1B4332",
-      padding: { bottom: 20 },
-    },
-    tooltip: {
-      backgroundColor: "#1B4332",
-      titleFont: {
-        family: "'Lexend', sans-serif",
-        size: 13,
-      },
-      bodyFont: {
-        family: "'Source Sans 3', sans-serif",
-        size: 12,
-      },
-      cornerRadius: 8,
-      padding: 12,
-      callbacks: {
-        label: (context: { dataset: { label?: string }; parsed: { y: number | null } }) => {
-          return `${context.dataset.label}: ${context.parsed.y?.toLocaleString("id-ID")} jiwa`;
-        },
-      },
-    },
-  },
-  scales: {
-    x: {
-      grid: {
-        display: false,
-      },
-      ticks: {
-        font: {
-          family: "'Source Sans 3', sans-serif",
-          size: 12,
-        },
-      },
-    },
-    y: {
-      beginAtZero: true,
-      grid: {
-        color: "rgba(0,0,0,0.05)",
-      },
-      ticks: {
-        font: {
-          family: "'Source Sans 3', sans-serif",
-          size: 12,
-        },
-        callback: (value: string | number) => {
-          return Number(value).toLocaleString("id-ID");
-        },
-      },
-    },
-  },
-};
+const COLOR_LAKI = "#15803d";
+const COLOR_PEREMPUAN = "#d97706";
 
-export default function PopulationChart({ data = fallbackData }: { data?: DusunData[] }) {
-  const chartData = {
-    labels: data.map((d) => d.dusun),
-    datasets: [
-      {
-        label: "Laki-laki",
-        data: data.map((d) => d.laki),
-        backgroundColor: "#2D6A4F",
-        borderRadius: 6,
-      },
-      {
-        label: "Perempuan",
-        data: data.map((d) => d.perempuan),
-        backgroundColor: "#D4A373",
-        borderRadius: 6,
-      },
-    ],
-  };
+function fmt(n: number) {
+  return (Number(n) || 0).toLocaleString("id-ID");
+}
+
+export default function PopulationChart({ data }: { data?: DusunData[] }) {
+  const rows = Array.isArray(data) && data.length > 0 ? data : fallbackData;
+  const max = Math.max(
+    1,
+    ...rows.map((d) => Math.max(Number(d.laki) || 0, Number(d.perempuan) || 0))
+  );
 
   return (
-    <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-[#D4D4AA]">
-      <div className="h-[350px] md:h-[400px]">
-        <Bar data={chartData} options={options} />
+    <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-[var(--color-border)]">
+      <h3
+        className="text-center text-base md:text-lg font-bold text-[var(--color-primary-dark)]"
+        style={{ fontFamily: "Lexend, sans-serif" }}
+      >
+        Jumlah Penduduk per Dusun
+      </h3>
+
+      {/* Legenda */}
+      <div className="mt-3 flex items-center justify-center gap-5 text-sm text-[var(--color-muted-foreground)]">
+        <span className="inline-flex items-center gap-2">
+          <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: COLOR_LAKI }} />
+          Laki-laki
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: COLOR_PEREMPUAN }} />
+          Perempuan
+        </span>
       </div>
-      <p className="mt-4 text-center text-xs text-[#6B7280]/70">
-        * Data bersifat ilustrasi. Data resmi akan diperbarui melalui admin CMS.
+
+      {/* Grafik batang */}
+      <div className="mt-6 flex items-end justify-around gap-3 h-[280px] md:h-[320px]">
+        {rows.map((d, i) => {
+          const laki = Number(d.laki) || 0;
+          const perempuan = Number(d.perempuan) || 0;
+          const nama = d.namaDusun ?? d.dusun ?? `Dusun ${i + 1}`;
+          return (
+            <div key={i} className="flex h-full flex-1 flex-col items-center justify-end">
+              <div className="flex h-full w-full items-end justify-center gap-1.5 md:gap-2">
+                {/* Laki-laki */}
+                <div className="flex h-full flex-col items-center justify-end">
+                  <span className="mb-1 text-[11px] font-semibold text-[var(--color-primary-dark)]">
+                    {fmt(laki)}
+                  </span>
+                  <div
+                    className="w-7 md:w-10 rounded-t-md transition-all"
+                    style={{ height: `${(laki / max) * 100}%`, backgroundColor: COLOR_LAKI, minHeight: laki > 0 ? "4px" : "0" }}
+                    title={`Laki-laki: ${fmt(laki)} jiwa`}
+                  />
+                </div>
+                {/* Perempuan */}
+                <div className="flex h-full flex-col items-center justify-end">
+                  <span className="mb-1 text-[11px] font-semibold text-[var(--color-accent-dark)]">
+                    {fmt(perempuan)}
+                  </span>
+                  <div
+                    className="w-7 md:w-10 rounded-t-md transition-all"
+                    style={{ height: `${(perempuan / max) * 100}%`, backgroundColor: COLOR_PEREMPUAN, minHeight: perempuan > 0 ? "4px" : "0" }}
+                    title={`Perempuan: ${fmt(perempuan)} jiwa`}
+                  />
+                </div>
+              </div>
+              <span className="mt-2 max-w-[7rem] truncate text-center text-xs font-medium text-[var(--color-foreground)]">
+                {nama}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <p className="mt-4 text-center text-xs text-[var(--color-muted-foreground)]/80">
+        Sumber: data kependudukan Desa Maja (dapat diperbarui melalui admin).
       </p>
     </div>
   );
