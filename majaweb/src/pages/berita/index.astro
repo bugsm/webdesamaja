@@ -7,6 +7,10 @@ import BeritaListing from "../../components/BeritaListing.astro";
 
 import { fetchSanity, urlForImage } from "../../utils/sanity";
 
+// Dirender saat diakses, bukan saat build — supaya berita baru dari Sanity
+// langsung tampil tanpa deploy ulang.
+export const prerender = false;
+
 const PAGE_SIZE = 10;
 
 // Placeholder bila Sanity kosong

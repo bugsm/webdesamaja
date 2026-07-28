@@ -5,7 +5,10 @@ import imageUrlBuilder from "@sanity/image-url";
 export const sanityClient = createClient({
   projectId: import.meta.env.PUBLIC_SANITY_PROJECT_ID || "your-project-id",
   dataset: import.meta.env.PUBLIC_SANITY_DATASET || "production",
-  useCdn: true, // `false` jika ingin memastikan data terbaru (tanpa cache) saat mendeploy
+  // Harus `false`: halaman berita dirender saat diakses (prerender = false), jadi
+  // datanya wajib segar. Dengan CDN aktif, berita yang baru dipublish di Studio
+  // bisa telat muncul sampai ~1 menit karena cache.
+  useCdn: false,
   apiVersion: "2023-05-03", // Tanggal rilis API version
 });
 

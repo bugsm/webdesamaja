@@ -6,30 +6,31 @@ import Footer from "../../../components/Footer.astro";
 import BeritaListing from "../../../components/BeritaListing.astro";
 import { fetchSanity, urlForImage } from "../../../utils/sanity";
 
-export async function getStaticPaths() {
-  const PAGE_SIZE = 10;
-  const query = `*[_type == "berita"] | order(date desc) {
-    title, excerpt, date, category, slug, image
-  }`;
-  const allNews = (await fetchSanity<any[]>(query)) || [];
-  const totalPages = Math.max(1, Math.ceil(allNews.length / PAGE_SIZE));
+// Dirender saat diakses — jumlah halaman ikut bertambah otomatis saat berita baru
+// dipublish, tanpa deploy ulang. Karena itu getStaticPaths() tidak dipakai lagi:
+// nomor halaman dibaca langsung dari URL.
+export const prerender = false;
 
-  const paths = [];
-  // Halaman 1 ada di /berita — di sini hanya halaman 2..N
-  for (let p = 2; p <= totalPages; p++) {
-    paths.push({
-      params: { page: String(p) },
-      props: {
-        posts: allNews.slice((p - 1) * PAGE_SIZE, p * PAGE_SIZE),
-        currentPage: p,
-        totalPages,
-      },
-    });
-  }
-  return paths;
+const PAGE_SIZE = 10;
+
+// Halaman 1 ada di /berita, jadi rute ini hanya melayani halaman 2 ke atas.
+const currentPage = Number(Astro.params.page);
+if (!Number.isInteger(currentPage) || currentPage < 2) {
+  return Astro.redirect("/berita");
 }
 
-const { posts, currentPage, totalPages } = Astro.props;
+const query = `*[_type == "berita"] | order(date desc) {
+  title, excerpt, date, category, slug, image
+}`;
+const allNews = (await fetchSanity<any[]>(query)) || [];
+const totalPages = Math.max(1, Math.ceil(allNews.length / PAGE_SIZE));
+
+// Nomor halaman melebihi jumlah berita yang ada
+if (currentPage > totalPages) {
+  return Astro.redirect("/berita");
+}
+
+const posts = allNews.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 const resolved = posts.map((n: any) => ({
   title: n.title,
   excerpt: n.excerpt,

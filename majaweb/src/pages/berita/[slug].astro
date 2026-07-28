@@ -7,36 +7,23 @@ import { fetchSanity, urlForImage } from "../../utils/sanity";
 import { PortableText } from "@portabletext/react";
 import NewsCarousel from "../../components/react/NewsCarousel";
 
-export async function getStaticPaths() {
-  const query = `*[_type == "berita" && defined(slug.current)]{ "params": { "slug": slug.current } }`;
-  const slugs = await fetchSanity<any[]>(query);
-  
-  if (!slugs || slugs.length === 0) {
-    return [
-      { params: { slug: "fallback-berita" } }
-    ];
-  }
-  return slugs;
-}
+// Dirender saat diakses — berita yang baru dipublish di Studio langsung bisa
+// dibuka tanpa deploy ulang. getStaticPaths() tidak dipakai lagi karena daftar
+// slug tidak perlu diketahui saat build.
+export const prerender = false;
 
 const { slug } = Astro.params;
 const query = `*[_type == "berita" && slug.current == $slug][0]{ title, excerpt, date, category, image, youtubeUrl, body, views }`;
 const post = await fetchSanity<any>(query, { slug });
 
-if (!post && slug !== "fallback-berita") {
-  return Astro.redirect('/404');
+// Slug tidak dikenal → balas 404 beneran. (Dulu redirect ke "/404", padahal
+// halaman itu tidak ada; juga tidak pernah terpakai karena halaman ini
+// di-prerender. Sekarang slug bebas, jadi harus ditangani benar.)
+if (!post) {
+  return new Response(null, { status: 404, statusText: "Berita tidak ditemukan" });
 }
 
-const displayPost = post || {
-  title: "Berita Tidak Ditemukan",
-  date: "2026-01-01",
-  category: "Umum",
-  excerpt: "Silakan periksa kembali URL atau pastikan koneksi ke Sanity berjalan dengan baik.",
-  body: null,
-  image: null,
-  youtubeUrl: null,
-  views: 0
-};
+const displayPost = post;
 
 // URL kanonik untuk tombol bagikan
 const shareUrl = new URL(Astro.url.pathname, Astro.site ?? "https://desamaja.my.id").href;
@@ -213,7 +200,7 @@ const youtubeEmbedUrl = getYouTubeEmbedUrl(displayPost.youtubeUrl);
   // Penghitung "jumlah dilihat": increment sekali per sesi per artikel via Netlify Function.
   const el = document.getElementById("view-count");
   const slug = el?.getAttribute("data-slug");
-  if (el && slug && slug !== "fallback-berita") {
+  if (el && slug) {
     const key = "viewed_" + slug;
     const alreadyViewed = sessionStorage.getItem(key) === "1";
     const hit = alreadyViewed ? "0" : "1";

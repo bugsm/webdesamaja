@@ -2,13 +2,17 @@ import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 import sanity from '@sanity/astro';
+import netlify from '@astrojs/netlify';
 import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
-// Situs di-render sepenuhnya statik (SSG) agar bisa dideploy gratis di Netlify
-// tanpa server/adapter. Data Sanity diambil saat build time.
+// Mode hybrid: default-nya statik (beranda, profil, potensi, kontak, peta di-build
+// jadi HTML), KECUALI halaman berita yang memakai `export const prerender = false`
+// sehingga dirender saat diakses. Dengan begitu berita baru dari Sanity langsung
+// muncul tanpa perlu deploy ulang.
 export default defineConfig({
   output: 'static',
+  adapter: netlify(),
   site: 'https://desamaja.my.id',
   integrations: [
     react(),
