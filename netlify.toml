@@ -4,17 +4,17 @@
 [build]
   base = "majaweb"
   command = "npm run build"
-  # Catatan: saat `base` diisi, path di bawah ini tetap dihitung dari ROOT repo,
-  # bukan dari `base`. Jadi harus ditulis lengkap "majaweb/...".
-  publish = "majaweb/dist"
+  # PENTING: saat `base` diisi, `publish` & `functions.directory` dihitung
+  # RELATIF terhadap base (= folder majaweb/). Jadi cukup tulis "dist",
+  # BUKAN "majaweb/dist" (kalau dobel, jadi majaweb/majaweb/dist → build gagal).
+  publish = "dist"
 
 [build.environment]
   NODE_VERSION = "22"
 
-# Serverless function (penghitung "jumlah dilihat" berita).
-# Sama seperti `publish`: path dihitung dari root repo, jadi diawali "majaweb/".
+# Serverless function (penghitung "jumlah dilihat" berita) — relatif ke base majaweb/.
 [functions]
-  directory = "majaweb/netlify/functions"
+  directory = "netlify/functions"
   node_bundler = "esbuild"
 
 # Cache aset statik (JS/CSS/gambar ber-hash) selama 1 tahun.
